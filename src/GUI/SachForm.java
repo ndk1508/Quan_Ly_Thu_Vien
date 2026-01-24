@@ -11,9 +11,8 @@ import javax.swing.border.TitledBorder;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
 
-public class SachForm extends JFrame { // Đã đổi tên class
+public class SachForm extends JFrame {
 
-    // 1. KHAI BÁO CÁC BIẾN GIAO DIỆN
     private JPanel contentPane;
     private JTextField txtMaSach, txtTenSach, txtNamXB, txtSoLuong, txtTimKiem;
     private JComboBox<String> cboLoai, cboNXB, cboTacGia, cboKeSach;
@@ -22,18 +21,16 @@ public class SachForm extends JFrame { // Đã đổi tên class
     private DefaultTableModel tableModel;
     private String strTenAnh = "no-image.png"; // Ảnh mặc định
 
-    // 2. KHAI BÁO KẾT NỐI CSDL
-    // === BẠN SỬA LẠI THÔNG TIN Ở ĐÂY CHO ĐÚNG MÁY BẠN ===
-    String url = "jdbc:sqlserver://localhost:1433;databaseName=QuanLySach;encrypt=true;trustServerCertificate=true;";
-    String user = "sa";
-    String pass = "123456";
+    // === CẤU HÌNH KẾT NỐI MYSQL (Chuẩn theo máy bạn) ===
+    String url = "jdbc:mysql://localhost:3306/ql_thuvien?useUnicode=true&characterEncoding=UTF-8";
+    String user = "root";
+    String pass = ""; 
     Connection conn = null;
 
-    // Hàm main để chạy chương trình
     public static void main(String[] args) {
         EventQueue.invokeLater(() -> {
             try {
-                SachForm frame = new SachForm(); // Đã đổi tên khởi tạo
+                SachForm frame = new SachForm();
                 frame.setVisible(true);
             } catch (Exception e) {
                 e.printStackTrace();
@@ -41,19 +38,17 @@ public class SachForm extends JFrame { // Đã đổi tên class
         });
     }
 
-    // Constructor: Khởi tạo giao diện
-    public SachForm() { // Đã đổi tên Constructor
-        setTitle("Quản Lý Sách - Java Swing");
+    public SachForm() {
+        setTitle("Quản Lý Sách - DB: ql_thuvien");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setBounds(100, 100, 1000, 700);
         
-        // --- PHẦN GIAO DIỆN (UI) ---
+        // --- GIAO DIỆN (UI) ---
         contentPane = new JPanel();
         contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
         setContentPane(contentPane);
         contentPane.setLayout(null);
 
-        // Tiêu đề
         JLabel lblTitle = new JLabel("QUẢN LÝ SÁCH");
         lblTitle.setFont(new Font("Tahoma", Font.BOLD, 20));
         lblTitle.setHorizontalAlignment(SwingConstants.CENTER);
@@ -69,12 +64,11 @@ public class SachForm extends JFrame { // Đã đổi tên class
         txtTenSach.setBounds(150, 60, 200, 25);
         contentPane.add(txtTenSach);
         
-        // Ẩn Mã Sách (Để quản lý ID khi Sửa/Xóa)
         txtMaSach = new JTextField(); 
-        txtMaSach.setVisible(false);
+        txtMaSach.setVisible(false); // Ẩn Mã Sách
         contentPane.add(txtMaSach);
 
-        // Combobox Loại
+        // Các Combobox
         JLabel lblLoai = new JLabel("Mã Loại:");
         lblLoai.setBounds(50, 100, 100, 25);
         contentPane.add(lblLoai);
@@ -82,7 +76,6 @@ public class SachForm extends JFrame { // Đã đổi tên class
         cboLoai.setBounds(150, 100, 200, 25);
         contentPane.add(cboLoai);
 
-        // Combobox NXB
         JLabel lblNXB = new JLabel("Nhà Xuất Bản:");
         lblNXB.setBounds(50, 140, 100, 25);
         contentPane.add(lblNXB);
@@ -90,7 +83,6 @@ public class SachForm extends JFrame { // Đã đổi tên class
         cboNXB.setBounds(150, 140, 200, 25);
         contentPane.add(cboNXB);
 
-        // Combobox Tác Giả
         JLabel lblTacGia = new JLabel("Tác Giả:");
         lblTacGia.setBounds(50, 180, 100, 25);
         contentPane.add(lblTacGia);
@@ -173,17 +165,17 @@ public class SachForm extends JFrame { // Đã đổi tên class
         table = new JTable(tableModel);
         scrollPane.setViewportView(table);
 
-        // --- GỌI CÁC HÀM XỬ LÝ KHI CHẠY ---
+        // --- GỌI HÀM KHI CHẠY ---
         connectDB();
-        loadCombobox();
-        loadData();
+        loadCombobox(); 
+        loadData();      
 
-        // --- XỬ LÝ SỰ KIỆN (EVENTS) ---
-
-        // Nút Chọn Ảnh
+        // --- SỰ KIỆN (EVENTS) ---
+        
+        // 1. Nút Chọn Ảnh
         btnChonAnh.addActionListener(e -> {
             JFileChooser fileChooser = new JFileChooser();
-            fileChooser.setFileFilter(new FileNameExtensionFilter("Hình ảnh", "jpg", "png", "gif"));
+            fileChooser.setFileFilter(new FileNameExtensionFilter("Hình ảnh", "jpg", "png"));
             if (fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
                 File file = fileChooser.getSelectedFile();
                 strTenAnh = file.getName();
@@ -193,34 +185,182 @@ public class SachForm extends JFrame { // Đã đổi tên class
             }
         });
 
-        // Nút Thêm
+        // 2. Nút Thêm (INSERT) - Cập nhật đúng tên cột DB
         btnThem.addActionListener(e -> {
             try {
-                String sql = "INSERT INTO Sach(TenSach, MaLoai, MaNXB, MaTacGia, NamXuatBan, SoLuong, MaKe, HinhAnh) VALUES(?,?,?,?,?,?,?,?)";
+                if (conn == null) { JOptionPane.showMessageDialog(null, "Chưa kết nối DB!"); return; }
+                
+                // SQL chuẩn theo bảng 'sach' của bạn: NamXB, Make
+                String sql = "INSERT INTO sach(TenSach, MaLoai, MaNXB, MaTacGia, NamXB, SoLuong, Make, HinhAnh) VALUES(?,?,?,?,?,?,?,?)";
                 PreparedStatement ps = conn.prepareStatement(sql);
                 ps.setString(1, txtTenSach.getText());
-                ps.setString(2, getID(cboLoai));
-                ps.setString(3, getID(cboNXB));
-                ps.setString(4, getID(cboTacGia));
-                ps.setInt(5, Integer.parseInt(txtNamXB.getText()));
+                ps.setInt(2, Integer.parseInt(getID(cboLoai)));   // Chuyển String "3-..." thành int 3
+                ps.setInt(3, Integer.parseInt(getID(cboNXB)));
+                ps.setInt(4, Integer.parseInt(getID(cboTacGia)));
+                ps.setInt(5, Integer.parseInt(txtNamXB.getText())); // Cột NamXB
                 ps.setInt(6, Integer.parseInt(txtSoLuong.getText()));
-                ps.setString(7, getID(cboKeSach));
+                ps.setInt(7, Integer.parseInt(getID(cboKeSach))); // Cột Make
                 ps.setString(8, strTenAnh);
-
+                
                 ps.executeUpdate();
                 JOptionPane.showMessageDialog(null, "Thêm thành công!");
                 loadData();
             } catch (Exception ex) {
                 ex.printStackTrace();
-                JOptionPane.showMessageDialog(null, "Lỗi: " + ex.getMessage());
+                JOptionPane.showMessageDialog(null, "Lỗi thêm: " + ex.getMessage());
             }
         });
 
-        // Nút Xóa
+        // 3. Nút Sửa (UPDATE)
+        btnSua.addActionListener(e -> {
+            int row = table.getSelectedRow();
+            if(row == -1) { JOptionPane.showMessageDialog(null, "Chọn sách để sửa"); return; }
+            try {
+                String maSach = tableModel.getValueAt(row, 0).toString();
+                // SQL chuẩn theo tên cột trong ảnh
+                String sql = "UPDATE sach SET TenSach=?, MaLoai=?, MaNXB=?, MaTacGia=?, NamXB=?, SoLuong=?, Make=?, HinhAnh=? WHERE MaSach=?";
+                PreparedStatement ps = conn.prepareStatement(sql);
+                ps.setString(1, txtTenSach.getText());
+                ps.setInt(2, Integer.parseInt(getID(cboLoai)));
+                ps.setInt(3, Integer.parseInt(getID(cboNXB)));
+                ps.setInt(4, Integer.parseInt(getID(cboTacGia)));
+                ps.setInt(5, Integer.parseInt(txtNamXB.getText()));
+                ps.setInt(6, Integer.parseInt(txtSoLuong.getText()));
+                ps.setInt(7, Integer.parseInt(getID(cboKeSach)));
+                ps.setString(8, strTenAnh);
+                ps.setString(9, maSach);
+                
+                ps.executeUpdate();
+                JOptionPane.showMessageDialog(null, "Cập nhật thành công!");
+                loadData();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(null, "Lỗi sửa: " + ex.getMessage());
+            }
+        });
+
+        // 4. Nút Xóa (DELETE)
         btnXoa.addActionListener(e -> {
             int row = table.getSelectedRow();
-            if(row == -1) {
-                 JOptionPane.showMessageDialog(null, "Vui lòng chọn sách để xóa");
-                 return;
+            if(row == -1) return;
+            if(JOptionPane.showConfirmDialog(null, "Bạn chắc chắn muốn xóa?") == JOptionPane.YES_OPTION) {
+                try {
+                    String maSach = tableModel.getValueAt(row, 0).toString();
+                    String sql = "DELETE FROM sach WHERE MaSach=?";
+                    PreparedStatement ps = conn.prepareStatement(sql);
+                    ps.setString(1, maSach);
+                    ps.executeUpdate();
+                    loadData();
+                    JOptionPane.showMessageDialog(null, "Đã xóa!");
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
             }
-            int confirm = JOptionPane.showConfirmDialog(null, "Bạn
+        });
+
+        // 5. Nút Tải lại
+        btnTaiLai.addActionListener(e -> {
+            txtTenSach.setText(""); txtNamXB.setText(""); txtSoLuong.setText("");
+            lblHinhAnh.setIcon(null); loadData();
+        });
+
+        // 6. Sự kiện Click Bảng
+        table.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent e) {
+                int row = table.getSelectedRow();
+                if (row >= 0) {
+                    txtMaSach.setText(tableModel.getValueAt(row, 0).toString());
+                    txtTenSach.setText(tableModel.getValueAt(row, 1).toString());
+                    
+                    setSelectedCombo(cboTacGia, tableModel.getValueAt(row, 2).toString());
+                    setSelectedCombo(cboNXB, tableModel.getValueAt(row, 3).toString());
+                    setSelectedCombo(cboLoai, tableModel.getValueAt(row, 4).toString());
+                    
+                    txtNamXB.setText(tableModel.getValueAt(row, 5).toString());
+                    txtSoLuong.setText(tableModel.getValueAt(row, 6).toString());
+                    
+                    setSelectedCombo(cboKeSach, tableModel.getValueAt(row, 7).toString());
+                    
+                    String anh = tableModel.getValueAt(row, 8).toString();
+                    strTenAnh = anh;
+                    // Đường dẫn ảnh (Bạn cần đảm bảo file ảnh tồn tại trong folder src/images/)
+                    ImageIcon icon = new ImageIcon("src/images/" + anh); 
+                    if (icon.getIconWidth() > 0) {
+                       Image img = icon.getImage().getScaledInstance(lblHinhAnh.getWidth(), lblHinhAnh.getHeight(), Image.SCALE_SMOOTH);
+                       lblHinhAnh.setIcon(new ImageIcon(img));
+                    } else {
+                        lblHinhAnh.setIcon(null); 
+                    }
+                }
+            }
+        });
+    }
+
+    // --- CÁC HÀM HỖ TRỢ ---
+
+    private void connectDB() {
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver"); 
+            conn = DriverManager.getConnection(url, user, pass);
+            System.out.println("Kết nối ql_thuvien thành công!");
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(null, "Lỗi kết nối: " + e.getMessage());
+        }
+    }
+
+    private void loadData() {
+        if (conn == null) return;
+        try {
+            tableModel.setRowCount(0);
+            // Lấy dữ liệu từ bảng 'sach'
+            String sql = "SELECT * FROM sach"; 
+            Statement st = conn.createStatement();
+            ResultSet rs = st.executeQuery(sql);
+            while (rs.next()) {
+                Vector<Object> vec = new Vector<>();
+                vec.add(rs.getInt("MaSach"));
+                vec.add(rs.getString("TenSach"));
+                vec.add(rs.getInt("MaTacGia")); 
+                vec.add(rs.getInt("MaNXB"));
+                vec.add(rs.getInt("MaLoai"));
+                vec.add(rs.getInt("NamXB"));   // Đã sửa thành NamXB
+                vec.add(rs.getInt("SoLuong"));
+                vec.add(rs.getInt("Make"));    // Đã sửa thành Make
+                vec.add(rs.getString("HinhAnh"));
+                tableModel.addRow(vec);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(null, "Lỗi tải dữ liệu: " + e.getMessage());
+        }
+    }
+
+    private void loadCombobox() {
+        // Đây là dữ liệu giả lập. Trong thực tế bạn nên SELECT từ bảng Loai, NXB...
+        cboLoai.addItem("3-Trinh Thám");
+        cboLoai.addItem("8-Truyện Tranh");
+        cboNXB.addItem("11-Võ Hoàng Kiệt");
+        cboNXB.addItem("13-Kim Đồng");
+        cboTacGia.addItem("13-Võ Hoàng Kiệt");
+        cboTacGia.addItem("14-Conan Doyle");
+        cboKeSach.addItem("2-Kệ 1");
+        cboKeSach.addItem("6-Kệ 2");
+    }
+
+    private String getID(JComboBox<String> cbo) {
+        if(cbo.getSelectedItem() == null) return "0";
+        // Tách chuỗi "3-Trinh Thám" lấy phần đầu "3"
+        return cbo.getSelectedItem().toString().split("-")[0];
+    }
+    
+    private void setSelectedCombo(JComboBox<String> cbo, String id) {
+        if(id == null) return;
+        for (int i = 0; i < cbo.getItemCount(); i++) {
+            if (cbo.getItemAt(i).startsWith(id + "-")) {
+                cbo.setSelectedIndex(i);
+                break;
+            }
+        }
+    }
+}
