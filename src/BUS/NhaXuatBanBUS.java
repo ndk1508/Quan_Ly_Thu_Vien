@@ -1,16 +1,29 @@
 package BUS;
 
-import javax.swing.JPanel;
+import DAL.NhaXuatBanDAL;
+import DTO.NhaXuatBanDTO;
+import java.util.ArrayList;
 
-public class NhaXuatBanBUS extends JPanel {
+public class NhaXuatBanBUS {
+    NhaXuatBanDAL nxbDAL = new NhaXuatBanDAL();
 
-	private static final long serialVersionUID = 1L;
+    public ArrayList<NhaXuatBanDTO> getDanhSachNXB() {
+        return nxbDAL.getAllNhaXuatBan();
+    }
 
-	/**
-	 * Create the panel.
-	 */
-	public NhaXuatBanBUS() {
+    public ArrayList<NhaXuatBanDTO> timKiemNXB(String tuKhoa) {
+        return nxbDAL.timKiemNhaXuatBan(tuKhoa);
+    }
 
-	}
+    public boolean themNXB(NhaXuatBanDTO nxb) {
+        return nxbDAL.themNhaXuatBan(nxb);
+    }
 
+    public boolean suaNXB(NhaXuatBanDTO nxb) {
+        return nxbDAL.suaNhaXuatBan(nxb);
+    }
+
+    public boolean xoaNXB(int maNXB) {
+        return nxbDAL.xoaNhaXuatBan(maNXB);
+    }
 }

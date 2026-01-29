@@ -1,16 +1,12 @@
 package BUS;
+import DAL.PhieuNhapDAL;
+import DTO.PhieuNhapDTO;
+import java.util.ArrayList;
 
-import javax.swing.JPanel;
-
-public class PhieuNhapBUS extends JPanel {
-
-	private static final long serialVersionUID = 1L;
-
-	/**
-	 * Create the panel.
-	 */
-	public PhieuNhapBUS() {
-
-	}
-
+public class PhieuNhapBUS {
+    PhieuNhapDAL pnDAL = new PhieuNhapDAL();
+    public ArrayList<PhieuNhapDTO> getAllPhieuNhap() { return pnDAL.getAllPhieuNhap(); }
+    public boolean themPhieuNhap(PhieuNhapDTO pn) { return pnDAL.themPhieuNhap(pn); }
+    public boolean suaPhieuNhap(PhieuNhapDTO pn) { return pnDAL.suaPhieuNhap(pn); }
+    public boolean xoaPhieuNhap(int maPN) { return pnDAL.xoaPhieuNhap(maPN); }
 }

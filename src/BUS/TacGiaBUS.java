@@ -1,16 +1,29 @@
 package BUS;
 
-import javax.swing.JPanel;
+import DAL.TacGiaDAL;
+import DTO.TacGiaDTO;
+import java.util.ArrayList;
 
-public class TacGiaBUS extends JPanel {
+public class TacGiaBUS {
+    TacGiaDAL tacGiaDAL = new TacGiaDAL();
 
-	private static final long serialVersionUID = 1L;
+    public ArrayList<TacGiaDTO> getDanhSachTacGia() {
+        return tacGiaDAL.getAllTacGia();
+    }
 
-	/**
-	 * Create the panel.
-	 */
-	public TacGiaBUS() {
+    public ArrayList<TacGiaDTO> timKiemTacGia(String tuKhoa) {
+        return tacGiaDAL.timKiemTacGia(tuKhoa);
+    }
 
-	}
+    public boolean themTacGia(TacGiaDTO tg) {
+        return tacGiaDAL.themTacGia(tg);
+    }
 
+    public boolean suaTacGia(TacGiaDTO tg) {
+        return tacGiaDAL.suaTacGia(tg);
+    }
+
+    public boolean xoaTacGia(int maTacGia) {
+        return tacGiaDAL.xoaTacGia(maTacGia);
+    }
 }
