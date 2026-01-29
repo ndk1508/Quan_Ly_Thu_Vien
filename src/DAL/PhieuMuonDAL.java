@@ -43,7 +43,45 @@ public class PhieuMuonDAL {
         }
         return list;
     }
+ // Thêm vào trong class PhieuMuonDAL
 
+ // ================= CẬP NHẬT PHIẾU MƯỢN =================
+ public boolean update(int maPM, int maNV, int maDG, java.sql.Date ngayMuon, int trangThai) {
+     String tinhTrang = (trangThai == 0) ? "Đang mượn" : "Đã trả";
+     String sql = """
+         UPDATE PhieuMuon 
+         SET MaNV = ?, MaDocGia = ?, NgayMuon = ?, TrangThai = ?, TinhTrang = ?
+         WHERE MaPM = ?
+     """;
+
+     try (PreparedStatement ps = conn.prepareStatement(sql)) {
+         ps.setInt(1, maNV);
+         ps.setInt(2, maDG);
+         ps.setDate(3, ngayMuon);
+         ps.setInt(4, trangThai);
+         ps.setString(5, tinhTrang);
+         ps.setInt(6, maPM);
+
+         return ps.executeUpdate() > 0;
+     } catch (Exception e) {
+         e.printStackTrace();
+     }
+     return false;
+ }
+
+ // ================= XÓA PHIẾU MƯỢN =================
+ public boolean delete(int maPM) {
+     String sql = "DELETE FROM PhieuMuon WHERE MaPM = ?";
+     try (PreparedStatement ps = conn.prepareStatement(sql)) {
+         ps.setInt(1, maPM);
+         return ps.executeUpdate() > 0;
+     } catch (Exception e) {
+         // Lưu ý: Nếu có bảng ChiTietPhieuMuon tham chiếu đến MaPM, 
+         // bạn cần xóa chi tiết trước hoặc thiết lập ON DELETE CASCADE trong DB.
+         e.printStackTrace();
+     }
+     return false;
+ }
 
     // ================= LẬP PHIẾU MƯỢN =================
     public boolean insert(int maNV, int maDG, java.sql.Date ngayMuon) {
