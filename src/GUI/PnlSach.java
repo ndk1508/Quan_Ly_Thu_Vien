@@ -6,6 +6,10 @@ import BUS.NhaXuatBanBUS;
 import DTO.NhaXuatBanDTO;
 import BUS.TacGiaBUS;
 import DTO.TacGiaDTO;
+import BUS.LoaiBUS;
+import DTO.LoaiDTO;
+import BUS.KeSachBUS;
+import DTO.KeSachDTO;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
@@ -29,6 +33,8 @@ public class PnlSach extends JPanel {
     SachBUS sachBUS = new SachBUS();
     NhaXuatBanBUS nxbBUS = new NhaXuatBanBUS();
     TacGiaBUS tgBUS = new TacGiaBUS();
+    LoaiBUS loaiBUS = new LoaiBUS();
+    KeSachBUS keBUS = new KeSachBUS();
 
     // HÀM MAIN ĐỂ CHẠY THỬ PANEL NÀY
     public static void main(String[] args) {
@@ -307,22 +313,33 @@ public class PnlSach extends JPanel {
     }
 
     private void loadCombobox() {
-        // Dữ liệu giả lập
-        cboLoai.addItem("3-Trinh Thám");
-        cboLoai.addItem("8-Truyện Tranh");
-        cboNXB.removeAllItems(); // Xóa sạch dữ liệu cũ/giả
+        // 1. Load LOẠI SÁCH (Dữ liệu thật)
+        cboLoai.removeAllItems();
+        ArrayList<LoaiDTO> listLoai = loaiBUS.getAllLoai();
+        for (LoaiDTO loai : listLoai) {
+            cboLoai.addItem(loai.getMaLoai() + "-" + loai.getTenLoai());
+        }
+
+        // 2. Load NHÀ XUẤT BẢN (Dữ liệu thật)
+        cboNXB.removeAllItems(); 
         ArrayList<NhaXuatBanDTO> listNXB = nxbBUS.getDanhSachNXB();
         for (NhaXuatBanDTO nxb : listNXB) {
-            // Thêm item dạng "Mã-Tên" (Ví dụ: 13-Kim Đồng)
             cboNXB.addItem(nxb.getMaNXB() + "-" + nxb.getTenNXB());
         }
+
+        // 3. Load TÁC GIẢ (Dữ liệu thật)
         cboTacGia.removeAllItems();
         ArrayList<TacGiaDTO> listTG = tgBUS.getDanhSachTacGia();
         for (TacGiaDTO tg : listTG) {
             cboTacGia.addItem(tg.getMaTacGia() + "-" + tg.getTenTacGia());
         }
-        cboKeSach.addItem("2-Kệ 1");
-        cboKeSach.addItem("6-Kệ 2");
+
+        // 4. Load KỆ SÁCH (Dữ liệu thật)
+        cboKeSach.removeAllItems();
+        ArrayList<KeSachDTO> listKe = keBUS.getAllKe();
+        for (KeSachDTO ke : listKe) {
+            cboKeSach.addItem(ke.getMaKe() + "-" + ke.getTenKe());
+        }
     }
 
     private String getID(JComboBox<String> cbo) {
