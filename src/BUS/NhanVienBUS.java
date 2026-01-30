@@ -22,4 +22,7 @@ public class NhanVienBUS {
     public boolean xoa(String maNV) {
         return dal.delete(maNV);
     }
+    public ArrayList<NhanVienDTO> timKiem(String tuKhoa) {
+        return dal.search(tuKhoa);
+    }
 }

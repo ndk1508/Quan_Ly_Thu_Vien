@@ -8,17 +8,40 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
+/**
+ * Lớp hỗ trợ để lưu trữ ID và Tên trong JComboBox
+ */
+class ComboItem {
+    private Object id; 
+    private String name;
+
+    public ComboItem(Object id, String name) {
+        this.id = id;
+        this.name = name;
+    }
+
+    public Object getId() { return id; }
+    public String getName() { return name; }
+
+    @Override
+    public String toString() {
+        return name; 
+    }
+}
+
 public class PnlPhieuMuon extends JPanel {
 
-    private JTextField txtMaPM, txtNgayMuon;
-    private JComboBox<String> cboNhanVien, cboDocGia, cboTinhTrang;
+    private JTextField txtMaPM, txtNgayMuon, txtTimKiem;
+    private JComboBox<ComboItem> cboNhanVien, cboDocGia; 
+    private JComboBox<String> cboTinhTrang;
     private JTable table;
     private DefaultTableModel model;
-    private JButton btnLapPhieu, btnSua, btnXoa, btnDaTra, btnLamMoi;
+    private JButton btnLapPhieu, btnSua, btnXoa, btnDaTra, btnLamMoi, btnTimKiem;
 
     private PhieuMuonBUS pmBUS = new PhieuMuonBUS();
     private NhanVienBUS nvBUS = new NhanVienBUS();
@@ -27,21 +50,29 @@ public class PnlPhieuMuon extends JPanel {
     public PnlPhieuMuon() {
         setLayout(new BorderLayout(10, 10));
         
-        initForm();     // Khởi tạo ô nhập liệu
-        initTable();    // Khởi tạo bảng
-        initButton();   // Khởi tạo các nút bấm
-        loadCombo();    // Đổ dữ liệu vào ComboBox
-        loadData();     // Đổ dữ liệu vào Bảng
-        event();        // Xử lý sự kiện
+        // --- Vùng NORTH (Form + Tìm kiếm) ---
+        JPanel pnlNorth = new JPanel(new BorderLayout(5, 5));
+        
+        initFormPanel(); // Phương thức này giờ sẽ add vào pnlNorth thay vì add trực tiếp vào PnlPhieuMuon
+        pnlNorth.add(initFormPanel(), BorderLayout.CENTER);
+        pnlNorth.add(initSearchPanel(), BorderLayout.SOUTH);
+        
+        add(pnlNorth, BorderLayout.NORTH);
+        
+        initTable();    
+        initButton();   
+        loadCombo();    
+        loadData(pmBUS.getAllView()); // Ban đầu load tất cả
+        event();        
     }
 
-    private void initForm() {
+    private JPanel initFormPanel() {
         JPanel pnl = new JPanel(new GridLayout(3, 4, 10, 10));
         pnl.setBorder(BorderFactory.createTitledBorder("Thông tin phiếu mượn"));
 
         txtMaPM = new JTextField();
-        txtMaPM.setEditable(false); // Không cho sửa mã vì là khóa chính tự tăng
-        txtMaPM.setBackground(Color.LIGHT_GRAY);
+        txtMaPM.setEditable(false); 
+        txtMaPM.setBackground(new Color(230, 230, 230));
 
         txtNgayMuon = new JTextField(new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
 
@@ -62,7 +93,21 @@ public class PnlPhieuMuon extends JPanel {
         pnl.add(new JLabel("Độc giả:"));
         pnl.add(cboDocGia);
 
-        add(pnl, BorderLayout.NORTH);
+        return pnl;
+    }
+
+    private JPanel initSearchPanel() {
+        JPanel pnl = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        pnl.setBorder(BorderFactory.createTitledBorder("Tìm kiếm"));
+        
+        txtTimKiem = new JTextField(25);
+        btnTimKiem = new JButton("Tìm kiếm");
+        
+        pnl.add(new JLabel("Nhập mã PM, tên NV hoặc tên độc giả: "));
+        pnl.add(txtTimKiem);
+        pnl.add(btnTimKiem);
+        
+        return pnl;
     }
 
     private void initTable() {
@@ -70,6 +115,7 @@ public class PnlPhieuMuon extends JPanel {
             new String[]{"Mã PM", "Nhân viên", "Độc giả", "Ngày mượn", "Tình trạng"}, 0
         );
         table = new JTable(model);
+        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         add(new JScrollPane(table), BorderLayout.CENTER);
     }
 
@@ -92,131 +138,120 @@ public class PnlPhieuMuon extends JPanel {
     private void loadCombo() {
         cboNhanVien.removeAllItems();
         cboDocGia.removeAllItems();
-        nvBUS.getAll().forEach(nv -> cboNhanVien.addItem(nv.getMaNV() + " - " + nv.getTenNV()));
-        dgBUS.getAll().forEach(dg -> cboDocGia.addItem(dg.getMaDocGia() + " - " + dg.getTenDocGia()));
+        nvBUS.getAll().forEach(nv -> cboNhanVien.addItem(new ComboItem(nv.getMaNV(), nv.getTenNV())));
+        dgBUS.getAll().forEach(dg -> cboDocGia.addItem(new ComboItem(dg.getMaDocGia(), dg.getTenDocGia())));
     }
 
-    private void loadData() {
+    private void loadData(ArrayList<Object[]> list) {
         model.setRowCount(0);
-        for (Object[] row : pmBUS.getAllView()) {
+        for (Object[] row : list) {
             model.addRow(row);
         }
     }
 
     private void event() {
-        // Sự kiện khi click vào dòng trong bảng để lấy dữ liệu lên form
+        // TÌM KIẾM
+        btnTimKiem.addActionListener(e -> {
+            String keyword = txtTimKiem.getText().trim();
+            if (keyword.isEmpty()) {
+                loadData(pmBUS.getAllView());
+            } else {
+                loadData(pmBUS.timKiem(keyword));
+            }
+        });
+
+        txtTimKiem.addActionListener(e -> btnTimKiem.doClick());
+
+        // CLICK BẢNG
         table.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 int row = table.getSelectedRow();
                 if (row < 0) return;
-
                 txtMaPM.setText(model.getValueAt(row, 0).toString());
                 
-                // Set ComboBox Nhân viên (Tìm kiếm chuỗi chứa tên)
                 String tenNV = model.getValueAt(row, 1).toString();
                 for (int i = 0; i < cboNhanVien.getItemCount(); i++) {
-                    if (cboNhanVien.getItemAt(i).contains(tenNV)) {
+                    if (cboNhanVien.getItemAt(i).getName().equals(tenNV)) {
                         cboNhanVien.setSelectedIndex(i);
                         break;
                     }
                 }
 
-                // Set ComboBox Độc giả
                 String tenDG = model.getValueAt(row, 2).toString();
                 for (int i = 0; i < cboDocGia.getItemCount(); i++) {
-                    if (cboDocGia.getItemAt(i).contains(tenDG)) {
+                    if (cboDocGia.getItemAt(i).getName().equals(tenDG)) {
                         cboDocGia.setSelectedIndex(i);
                         break;
                     }
                 }
-
                 txtNgayMuon.setText(model.getValueAt(row, 3).toString());
-                
-                // Set ComboBox Tình trạng
-                String tinhTrang = model.getValueAt(row, 4).toString();
-                cboTinhTrang.setSelectedItem(tinhTrang);
+                cboTinhTrang.setSelectedItem(model.getValueAt(row, 4).toString());
             }
         });
 
-        // Nút Lập phiếu
+        // LẬP PHIẾU
         btnLapPhieu.addActionListener(e -> {
             try {
-                int maNV = Integer.parseInt(cboNhanVien.getSelectedItem().toString().split(" - ")[0]);
-                int maDG = Integer.parseInt(cboDocGia.getSelectedItem().toString().split(" - ")[0]);
+                int maNV = Integer.parseInt(((ComboItem) cboNhanVien.getSelectedItem()).getId().toString());
+                int maDG = Integer.parseInt(((ComboItem) cboDocGia.getSelectedItem()).getId().toString());
                 Date date = new SimpleDateFormat("yyyy-MM-dd").parse(txtNgayMuon.getText());
-                
                 if (pmBUS.lapPhieu(maNV, maDG, date)) {
-                    JOptionPane.showMessageDialog(this, "Lập phiếu thành công");
-                    loadData();
+                    loadData(pmBUS.getAllView());
+                    JOptionPane.showMessageDialog(this, "Thành công");
                 }
             } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, "Lỗi: Kiểm tra lại dữ liệu và định dạng ngày (yyyy-MM-dd)");
+                JOptionPane.showMessageDialog(this, "Lỗi định dạng ngày!");
             }
         });
 
-        // Nút Sửa
+        // SỬA
         btnSua.addActionListener(e -> {
-            if (txtMaPM.getText().isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Vui lòng chọn một phiếu mượn từ bảng để sửa");
-                return;
-            }
+            if (txtMaPM.getText().isEmpty()) return;
             try {
                 int maPM = Integer.parseInt(txtMaPM.getText());
-                int maNV = Integer.parseInt(cboNhanVien.getSelectedItem().toString().split(" - ")[0]);
-                int maDG = Integer.parseInt(cboDocGia.getSelectedItem().toString().split(" - ")[0]);
-                int trangThai = cboTinhTrang.getSelectedIndex(); // 0: Đang mượn, 1: Đã trả
+                int maNV = Integer.parseInt(((ComboItem) cboNhanVien.getSelectedItem()).getId().toString());
+                int maDG = Integer.parseInt(((ComboItem) cboDocGia.getSelectedItem()).getId().toString());
+                int trangThai = cboTinhTrang.getSelectedIndex(); 
                 Date date = new SimpleDateFormat("yyyy-MM-dd").parse(txtNgayMuon.getText());
 
                 if (pmBUS.suaPhieu(maPM, maNV, maDG, date, trangThai)) {
-                    JOptionPane.showMessageDialog(this, "Cập nhật phiếu mượn thành công");
-                    loadData();
+                    loadData(pmBUS.getAllView());
+                    JOptionPane.showMessageDialog(this, "Cập nhật thành công");
                 }
             } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, "Lỗi định dạng dữ liệu!");
+                JOptionPane.showMessageDialog(this, "Lỗi dữ liệu!");
             }
         });
 
-        // Nút Xóa
+        // XÓA
         btnXoa.addActionListener(e -> {
-            if (txtMaPM.getText().isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Vui lòng chọn phiếu cần xóa");
-                return;
-            }
-            int confirm = JOptionPane.showConfirmDialog(this, "Bạn có chắc muốn xóa phiếu này?", "Xác nhận xóa", JOptionPane.YES_NO_OPTION);
-            if (confirm == JOptionPane.YES_OPTION) {
-                int maPM = Integer.parseInt(txtMaPM.getText());
-                if (pmBUS.xoaPhieu(maPM)) {
-                    JOptionPane.showMessageDialog(this, "Xóa thành công");
+            if (txtMaPM.getText().isEmpty()) return;
+            if (JOptionPane.showConfirmDialog(this, "Xóa phiếu này?", "Xác nhận", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
+                if (pmBUS.xoaPhieu(Integer.parseInt(txtMaPM.getText()))) {
+                    loadData(pmBUS.getAllView());
                     btnLamMoi.doClick();
-                } else {
-                    JOptionPane.showMessageDialog(this, "Xóa thất bại (Có thể phiếu này đang chứa dữ liệu liên quan)");
                 }
             }
         });
 
-        // Nút Đánh dấu đã trả
+        // ĐÁNH DẤU ĐÃ TRẢ
         btnDaTra.addActionListener(e -> {
             int row = table.getSelectedRow();
-            if (row < 0) {
-                JOptionPane.showMessageDialog(this, "Vui lòng chọn phiếu mượn trên bảng");
-                return;
-            }
+            if (row < 0) return;
             int maPM = Integer.parseInt(model.getValueAt(row, 0).toString());
-            if(pmBUS.danhDauDaTra(maPM)) {
-                JOptionPane.showMessageDialog(this, "Đã cập nhật trạng thái đã trả");
-                loadData();
-            }
+            if(pmBUS.danhDauDaTra(maPM)) loadData(pmBUS.getAllView());
         });
 
-        // Nút Làm mới
+        // LÀM MỚI
         btnLamMoi.addActionListener(e -> {
             txtMaPM.setText("");
+            txtTimKiem.setText("");
             txtNgayMuon.setText(new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
-            cboNhanVien.setSelectedIndex(0);
-            cboDocGia.setSelectedIndex(0);
+            if (cboNhanVien.getItemCount() > 0) cboNhanVien.setSelectedIndex(0);
+            if (cboDocGia.getItemCount() > 0) cboDocGia.setSelectedIndex(0);
             cboTinhTrang.setSelectedIndex(0);
-            loadData();
+            loadData(pmBUS.getAllView());
         });
     }
 }

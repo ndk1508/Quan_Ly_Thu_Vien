@@ -6,7 +6,47 @@ import java.util.ArrayList;
 public class PhieuMuonDAL {
 
     Connection conn = DBConnect.getConnection();
+    public ArrayList<Object[]> search(String keyword) {
+        ArrayList<Object[]> list = new ArrayList<>();
+        String sql = """
+            SELECT 
+                pm.MaPM,
+                nv.TenNV AS TenNhanVien,
+                dg.tendocgia AS TenDocGia,
+                pm.NgayMuon,
+                CASE 
+                    WHEN pm.TrangThai = 0 THEN 'Đang mượn'
+                    WHEN pm.TrangThai = 1 THEN 'Đã trả'
+                END AS TinhTrang
+            FROM phieumuon pm
+            JOIN nhanvien nv ON pm.MaNV = nv.MaNV
+            JOIN docgia dg ON pm.MaDocGia = dg.madocgia
+            WHERE pm.MaPM LIKE ? OR nv.TenNV LIKE ? OR dg.tendocgia LIKE ?
+        """;
 
+        try (Connection con = DBConnect.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            
+            String val = "%" + keyword + "%";
+            ps.setString(1, val);
+            ps.setString(2, val);
+            ps.setString(3, val);
+            
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                list.add(new Object[]{
+                    rs.getInt("MaPM"),
+                    rs.getString("TenNhanVien"),
+                    rs.getString("TenDocGia"),
+                    rs.getDate("NgayMuon"),
+                    rs.getString("TinhTrang")
+                });
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
     // ================= LẤY DANH SÁCH HIỂN THỊ =================
     public ArrayList<Object[]> getAllView() {
         ArrayList<Object[]> list = new ArrayList<>();

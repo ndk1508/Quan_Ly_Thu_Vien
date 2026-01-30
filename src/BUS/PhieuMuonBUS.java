@@ -29,4 +29,7 @@ public class PhieuMuonBUS {
     public boolean danhDauDaTra(int maPM) {
         return dal.capNhatDaTra(maPM);
     }
+    public ArrayList<Object[]> timKiem(String keyword) {
+        return dal.search(keyword);
+    }
 }

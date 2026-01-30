@@ -5,7 +5,31 @@ import java.sql.*;
 import java.util.ArrayList;
 
 public class DocGiaDAL {
-
+	public ArrayList<DocGiaDTO> search(String keyword) {
+	    ArrayList<DocGiaDTO> list = new ArrayList<>();
+	    // Tìm theo Mã hoặc Tên
+	    String sql = "SELECT * FROM docgia WHERE madocgia LIKE ? OR tendocgia LIKE ?";
+	    try (Connection conn = DBConnect.getConnection();
+	         PreparedStatement ps = conn.prepareStatement(sql)) {
+	        ps.setString(1, "%" + keyword + "%");
+	        ps.setString(2, "%" + keyword + "%");
+	        ResultSet rs = ps.executeQuery();
+	        while (rs.next()) {
+	            DocGiaDTO dg = new DocGiaDTO(
+	                rs.getInt("madocgia"),
+	                rs.getString("tendocgia"),
+	                rs.getString("gioitinh"),
+	                rs.getString("diachi"),
+	                rs.getString("sdt"),
+	                rs.getInt("trangthai")
+	            );
+	            list.add(dg);
+	        }
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    }
+	    return list;
+	}
     public ArrayList<DocGiaDTO> getAll() {
         ArrayList<DocGiaDTO> list = new ArrayList<>();
         String sql = "SELECT * FROM docgia";

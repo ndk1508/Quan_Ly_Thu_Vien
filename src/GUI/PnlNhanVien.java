@@ -5,20 +5,24 @@ import DTO.NhanVienDTO;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.util.ArrayList;
 
 public class PnlNhanVien extends JPanel {
 
-    JTextField txtMaNV, txtTenNV, txtNamSinh, txtDiaChi, txtSdt;
-    JComboBox<String> cboGioiTinh, cboTrangThai;
-    JButton btnThem, btnSua, btnXoa, btnLamMoi;
-    JTable tbl;
-    DefaultTableModel model;
-    NhanVienBUS bus = new NhanVienBUS();
+    private JTextField txtMaNV, txtTenNV, txtNamSinh, txtDiaChi, txtSdt, txtTimKiem; // Thêm txtTimKiem
+    private JComboBox<String> cboGioiTinh, cboTrangThai;
+    private JButton btnThem, btnSua, btnXoa, btnLamMoi, btnTimKiem; // Thêm btnTimKiem
+    private JTable tbl;
+    private DefaultTableModel model;
+    private NhanVienBUS bus = new NhanVienBUS();
 
     public PnlNhanVien() {
         setLayout(new BorderLayout(10, 10));
 
-        // ===== FORM =====
+        // ===== VÙNG PHÍA BẮC (FORM + TÌM KIẾM) =====
+        JPanel pnlNorth = new JPanel(new BorderLayout(5, 5));
+
+        // 1. FORM NHẬP LIỆU
         JPanel pnlForm = new JPanel(new GridLayout(4, 4, 10, 10));
         pnlForm.setBorder(BorderFactory.createTitledBorder("Thông tin nhân viên"));
 
@@ -27,67 +31,59 @@ public class PnlNhanVien extends JPanel {
         txtNamSinh = new JTextField();
         txtDiaChi = new JTextField();
         txtSdt = new JTextField();
-
         cboGioiTinh = new JComboBox<>(new String[]{"Nam", "Nữ"});
         cboTrangThai = new JComboBox<>(new String[]{"Hoạt động", "Ngừng"});
 
-        pnlForm.add(new JLabel("Mã NV"));
-        pnlForm.add(txtMaNV);
-        pnlForm.add(new JLabel("Tên NV"));
-        pnlForm.add(txtTenNV);
+        pnlForm.add(new JLabel("Mã NV")); pnlForm.add(txtMaNV);
+        pnlForm.add(new JLabel("Tên NV")); pnlForm.add(txtTenNV);
+        pnlForm.add(new JLabel("Năm sinh")); pnlForm.add(txtNamSinh);
+        pnlForm.add(new JLabel("Giới tính")); pnlForm.add(cboGioiTinh);
+        pnlForm.add(new JLabel("Địa chỉ")); pnlForm.add(txtDiaChi);
+        pnlForm.add(new JLabel("SĐT")); pnlForm.add(txtSdt);
+        pnlForm.add(new JLabel("Trạng thái")); pnlForm.add(cboTrangThai);
 
-        pnlForm.add(new JLabel("Năm sinh"));
-        pnlForm.add(txtNamSinh);
-        pnlForm.add(new JLabel("Giới tính"));
-        pnlForm.add(cboGioiTinh);
+        // 2. THANH TÌM KIẾM
+        JPanel pnlSearch = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        pnlSearch.setBorder(BorderFactory.createTitledBorder("Tìm kiếm"));
+        txtTimKiem = new JTextField(20);
+        btnTimKiem = new JButton("Tìm kiếm");
+        pnlSearch.add(new JLabel("Nhập mã hoặc tên: "));
+        pnlSearch.add(txtTimKiem);
+        pnlSearch.add(btnTimKiem);
 
-        pnlForm.add(new JLabel("Địa chỉ"));
-        pnlForm.add(txtDiaChi);
-        pnlForm.add(new JLabel("SĐT"));
-        pnlForm.add(txtSdt);
+        pnlNorth.add(pnlForm, BorderLayout.CENTER);
+        pnlNorth.add(pnlSearch, BorderLayout.SOUTH);
 
-        pnlForm.add(new JLabel("Trạng thái"));
-        pnlForm.add(cboTrangThai);
-
-        // ===== BUTTON =====
+        // ===== BUTTON CHỨC NĂNG (DƯỚI CÙNG) =====
         JPanel pnlButton = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 5));
-
         btnThem = new JButton("Thêm");
         btnSua = new JButton("Sửa");
         btnXoa = new JButton("Xóa");
         btnLamMoi = new JButton("Làm mới");
+        pnlButton.add(btnThem); pnlButton.add(btnSua); pnlButton.add(btnXoa); pnlButton.add(btnLamMoi);
 
-        pnlButton.add(btnThem);
-        pnlButton.add(btnSua);
-        pnlButton.add(btnXoa);
-        pnlButton.add(btnLamMoi);
-
-        JPanel pnlTop = new JPanel(new BorderLayout());
-        pnlTop.add(pnlForm, BorderLayout.CENTER);
-        pnlTop.add(pnlButton, BorderLayout.SOUTH);
-
-        // ===== TABLE =====
+        // ===== BẢNG DỮ LIỆU =====
         model = new DefaultTableModel(new String[]{
-                "MaNV", "TenNV", "NamSinh",
-                "GioiTinh", "DiaChi", "Sdt", "TrangThai"
+                "MaNV", "TenNV", "NamSinh", "GioiTinh", "DiaChi", "Sdt", "TrangThai"
         }, 0);
-
         tbl = new JTable(model);
         tbl.setRowHeight(25);
         JScrollPane scroll = new JScrollPane(tbl);
 
-        add(pnlTop, BorderLayout.NORTH);
+        // Gom nhóm layout chính
+        add(pnlNorth, BorderLayout.NORTH);
         add(scroll, BorderLayout.CENTER);
+        add(pnlButton, BorderLayout.SOUTH);
 
-        // ===== EVENTS =====
-        loadTable();
+        // ===== KHỞI CHẠY =====
+        loadTable(bus.getAll());
         suKien();
     }
 
-    // ===== LOAD TABLE =====
-    private void loadTable() {
+    // Cập nhật loadTable để nhận danh sách (phục vụ tìm kiếm)
+    private void loadTable(ArrayList<NhanVienDTO> list) {
         model.setRowCount(0);
-        for (NhanVienDTO nv : bus.getAll()) {
+        for (NhanVienDTO nv : list) {
             model.addRow(new Object[]{
                     nv.getMaNV(),
                     nv.getTenNV(),
@@ -100,8 +96,20 @@ public class PnlNhanVien extends JPanel {
         }
     }
 
-    // ===== SỰ KIỆN =====
     private void suKien() {
+        // TÌM KIẾM
+        btnTimKiem.addActionListener(e -> {
+            String keyword = txtTimKiem.getText().trim();
+            if (keyword.isEmpty()) {
+                loadTable(bus.getAll());
+            } else {
+                ArrayList<NhanVienDTO> ketQua = bus.timKiem(keyword);
+                loadTable(ketQua);
+            }
+        });
+
+        // Tìm nhanh khi nhấn Enter trong ô tìm kiếm
+        txtTimKiem.addActionListener(e -> btnTimKiem.doClick());
 
         // CLICK TABLE -> ĐỔ FORM
         tbl.getSelectionModel().addListSelectionListener(e -> {
@@ -120,43 +128,48 @@ public class PnlNhanVien extends JPanel {
 
         // THÊM
         btnThem.addActionListener(e -> {
-            NhanVienDTO nv = getForm();
-            if (bus.them(nv)) {
-                loadTable();
-                lamMoi();
-                JOptionPane.showMessageDialog(this, "Thêm thành công");
+            try {
+                NhanVienDTO nv = getForm();
+                if (bus.them(nv)) {
+                    loadTable(bus.getAll());
+                    lamMoi();
+                    JOptionPane.showMessageDialog(this, "Thêm thành công");
+                }
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "Lỗi dữ liệu: " + ex.getMessage());
             }
         });
 
         // SỬA
         btnSua.addActionListener(e -> {
-            NhanVienDTO nv = getForm();
-            if (bus.sua(nv)) {
-                loadTable();
-                JOptionPane.showMessageDialog(this, "Sửa thành công");
+            try {
+                NhanVienDTO nv = getForm();
+                if (bus.sua(nv)) {
+                    loadTable(bus.getAll());
+                    JOptionPane.showMessageDialog(this, "Sửa thành công");
+                }
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "Lỗi dữ liệu!");
             }
         });
 
         // XOÁ
         btnXoa.addActionListener(e -> {
-            int row = tbl.getSelectedRow();
-            if (row < 0) return;
-
-            String maNV = txtMaNV.getText();
-            if (JOptionPane.showConfirmDialog(this,
-                    "Xóa nhân viên này?",
-                    "Xác nhận",
-                    JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
-
-                if (bus.xoa(maNV)) {
-                    loadTable();
+            if (txtMaNV.getText().isEmpty()) return;
+            if (JOptionPane.showConfirmDialog(this, "Xóa nhân viên này?", "Xác nhận", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
+                if (bus.xoa(txtMaNV.getText())) {
+                    loadTable(bus.getAll());
                     lamMoi();
                 }
             }
         });
 
         // LÀM MỚI
-        btnLamMoi.addActionListener(e -> lamMoi());
+        btnLamMoi.addActionListener(e -> {
+            lamMoi();
+            txtTimKiem.setText("");
+            loadTable(bus.getAll());
+        });
     }
 
     private NhanVienDTO getForm() {

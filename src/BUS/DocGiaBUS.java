@@ -19,6 +19,9 @@ public class DocGiaBUS {
     public boolean sua(DocGiaDTO dg) {
         return dal.update(dg);
     }
+    public ArrayList<DocGiaDTO> timKiem(String tuKhoa) {
+        return dal.search(tuKhoa); // Gọi xuống DAL
+    }
 
     public String kiemTraXoa(int maDocGia) {
         try {

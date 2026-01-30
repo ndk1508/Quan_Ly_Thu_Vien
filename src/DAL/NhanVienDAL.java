@@ -5,7 +5,28 @@ import java.sql.*;
 import java.util.ArrayList;
 
 public class NhanVienDAL {
-
+	public ArrayList<NhanVienDTO> search(String keyword) {
+	    ArrayList<NhanVienDTO> list = new ArrayList<>();
+	    String sql = "SELECT * FROM nhanvien WHERE MaNV LIKE ? OR TenNV LIKE ?";
+	    try (Connection conn = DBConnect.getConnection();
+	         PreparedStatement ps = conn.prepareStatement(sql)) {
+	        ps.setString(1, "%" + keyword + "%" );
+	        ps.setString(2, "%" + keyword + "%" );
+	        ResultSet rs = ps.executeQuery();
+	        while (rs.next()) {
+	            list.add(new NhanVienDTO(
+	                rs.getString("MaNV"),
+	                rs.getString("TenNV"),
+	                rs.getInt("NamSinh"),
+	                rs.getString("GioiTinh"),
+	                rs.getString("DiaChi"),
+	                rs.getString("Sdt"),
+	                rs.getInt("TrangThai")
+	            ));
+	        }
+	    } catch (Exception e) { e.printStackTrace(); }
+	    return list;
+	}
     public ArrayList<NhanVienDTO> getAll() {
         ArrayList<NhanVienDTO> list = new ArrayList<>();
         String sql = "SELECT * FROM NhanVien";
