@@ -23,7 +23,7 @@ import javax.swing.table.DefaultTableModel;
 public class PnlSach extends JPanel {
 
     private JTextField txtMaSach, txtTenSach, txtNamXB, txtSoLuong, txtTimKiem;
-    private JComboBox<String> cboLoai, cboNXB, cboTacGia, cboKeSach;
+    private JComboBox cboLoai, cboNXB, cboTacGia, cboKeSach;
     private JLabel lblHinhAnh;
     private JTable table;
     private DefaultTableModel tableModel;
@@ -53,6 +53,25 @@ public class PnlSach extends JPanel {
                 e.printStackTrace();
             }
         });
+    }
+ // Class hỗ trợ lưu Mã và Tên vào Combobox
+    class ComboItem {
+        private String id;
+        private String name;
+
+        public ComboItem(String id, String name) {
+            this.id = id;
+            this.name = name;
+        }
+
+        public String getId() { return id; }
+        
+        public String getName() { return name; }
+
+        @Override
+        public String toString() {
+            return name; // Chỉ hiển thị Tên ra màn hình
+        }
     }
 
     // CONSTRUCTOR
@@ -313,46 +332,56 @@ public class PnlSach extends JPanel {
     }
 
     private void loadCombobox() {
-        // 1. Load LOẠI SÁCH (Dữ liệu thật)
+        // 1. Loại Sách
         cboLoai.removeAllItems();
         ArrayList<LoaiDTO> listLoai = loaiBUS.getAllLoai();
         for (LoaiDTO loai : listLoai) {
-            cboLoai.addItem(loai.getMaLoai() + "-" + loai.getTenLoai());
+            // Lưu cả Mã và Tên, nhưng chỉ hiện Tên (do hàm toString ở trên)
+            cboLoai.addItem(new ComboItem(String.valueOf(loai.getMaLoai()), loai.getTenLoai()));
         }
 
-        // 2. Load NHÀ XUẤT BẢN (Dữ liệu thật)
+        // 2. Nhà Xuất Bản
         cboNXB.removeAllItems(); 
         ArrayList<NhaXuatBanDTO> listNXB = nxbBUS.getDanhSachNXB();
         for (NhaXuatBanDTO nxb : listNXB) {
-            cboNXB.addItem(nxb.getMaNXB() + "-" + nxb.getTenNXB());
+            cboNXB.addItem(new ComboItem(String.valueOf(nxb.getMaNXB()), nxb.getTenNXB()));
         }
 
-        // 3. Load TÁC GIẢ (Dữ liệu thật)
+        // 3. Tác Giả
         cboTacGia.removeAllItems();
         ArrayList<TacGiaDTO> listTG = tgBUS.getDanhSachTacGia();
         for (TacGiaDTO tg : listTG) {
-            cboTacGia.addItem(tg.getMaTacGia() + "-" + tg.getTenTacGia());
+            cboTacGia.addItem(new ComboItem(String.valueOf(tg.getMaTacGia()), tg.getTenTacGia()));
         }
 
-        // 4. Load KỆ SÁCH (Dữ liệu thật)
+        // 4. Kệ Sách
         cboKeSach.removeAllItems();
         ArrayList<KeSachDTO> listKe = keBUS.getAllKe();
         for (KeSachDTO ke : listKe) {
-            cboKeSach.addItem(ke.getMaKe() + "-" + ke.getTenKe());
+            cboKeSach.addItem(new ComboItem(String.valueOf(ke.getMaKe()), ke.getTenKe()));
         }
     }
 
-    private String getID(JComboBox<String> cbo) {
-        if(cbo.getSelectedItem() == null) return "0";
-        return cbo.getSelectedItem().toString().split("-")[0];
+ // Hàm lấy ID từ Combobox đã chọn
+    private String getID(JComboBox cbo) {
+        Object item = cbo.getSelectedItem();
+        if (item != null && item instanceof ComboItem) {
+            return ((ComboItem) item).getId(); // Lấy ID ngầm bên trong
+        }
+        return "0";
     }
     
-    private void setSelectedCombo(JComboBox<String> cbo, String id) {
-        if(id == null) return;
+    // Hàm chọn dòng trong Combobox dựa theo ID (dùng khi bấm vào bảng để đổ dữ liệu lên)
+    private void setSelectedCombo(JComboBox cbo, String idToCheck) {
+        if (idToCheck == null) return;
         for (int i = 0; i < cbo.getItemCount(); i++) {
-            if (cbo.getItemAt(i).startsWith(id + "-")) {
-                cbo.setSelectedIndex(i);
-                break;
+            Object item = cbo.getItemAt(i);
+            if (item instanceof ComboItem) {
+                ComboItem comboItem = (ComboItem) item;
+                if (comboItem.getId().equals(idToCheck)) {
+                    cbo.setSelectedIndex(i);
+                    break;
+                }
             }
         }
     }
