@@ -11,7 +11,7 @@ public class FrmMain extends JFrame {
     JPanel pnlHeader, pnlMenu, pnlContent;
     JButton btnTrangChu, btnSach, btnDocGia, btnTacGia,
             btnNXB, btnNhanVien, btnPhieuMuon,
-            btnPhieuNhap, btnThongKe, btnDangXuat;
+            btnPhieuNhap, btnThongKe, btnChung, btnDangXuat;
 
     JLabel lblTitle, lblWelcome;
     TaiKhoanDTO taiKhoan;
@@ -50,7 +50,7 @@ public class FrmMain extends JFrame {
         pnlHeader.add(lblTitle);
 
         // ===== MENU (Khớp tên file từ danh sách icons của bạn) =====
-        pnlMenu = new JPanel(new GridLayout(11, 1, 0, 0)); 
+        pnlMenu = new JPanel(new GridLayout(12, 1, 0, 0)); 
         pnlMenu.setBackground(new Color(51, 51, 51));
         pnlMenu.setPreferredSize(new Dimension(240, 0));
 
@@ -63,7 +63,8 @@ public class FrmMain extends JFrame {
         btnNhanVien = taoButton("Nhân Viên", "Staff.png");
         btnPhieuMuon = taoButton("Phiếu Mượn", "phieumuon.png");
         btnPhieuNhap = taoButton("Phiếu Nhập", "phieunhap.png");
-        btnThongKe = taoButton("Thống Kê", "Combo Chart.png");
+        btnThongKe = taoButton("Thống Kê", "Combo Chart.png");;
+        btnChung = taoButton("Chung", "chungpng.png");
         btnDangXuat = taoButton("Đăng Xuất", "Exit.png");
 
         pnlMenu.add(btnTrangChu);
@@ -75,6 +76,7 @@ public class FrmMain extends JFrame {
         pnlMenu.add(btnPhieuMuon);
         pnlMenu.add(btnPhieuNhap);
         pnlMenu.add(btnThongKe);
+        pnlMenu.add(btnChung);
         pnlMenu.add(new JLabel()); // Placeholder
         pnlMenu.add(btnDangXuat);
 
@@ -108,21 +110,63 @@ public class FrmMain extends JFrame {
     }
 
     private void suKienMenu() {
-        btnSach.addActionListener(e -> loadPanel(new PnlSach()));
-        btnDocGia.addActionListener(e -> loadPanel(new PnlDocGia()));
-        btnNhanVien.addActionListener(e -> loadPanel(new PnlNhanVien()));
-        btnTacGia.addActionListener(e -> loadPanel(new PnlTacGia()));
-        btnNXB.addActionListener(e -> loadPanel(new PnlNhaXuatBan()));
-        btnPhieuMuon.addActionListener(e -> loadPanel(new PnlPhieuMuon()));
-        btnPhieuNhap.addActionListener(e -> loadPanel(new PnlPhieuNhap()));
-        btnThongKe.addActionListener(e -> loadPanel(new PnlThongKe()));
+
+        btnSach.addActionListener(e -> {
+            loadPanel(new PnlSach());
+            setActiveButton(btnSach);
+        });
+
+        btnDocGia.addActionListener(e -> {
+            loadPanel(new PnlDocGia());
+            setActiveButton(btnDocGia);
+        });
+
+        btnNhanVien.addActionListener(e -> {
+            loadPanel(new PnlNhanVien());
+            setActiveButton(btnNhanVien);
+        });
+
+        btnTacGia.addActionListener(e -> {
+            loadPanel(new PnlTacGia());
+            setActiveButton(btnTacGia);
+        });
+
+        btnNXB.addActionListener(e -> {
+            loadPanel(new PnlNhaXuatBan());
+            setActiveButton(btnNXB);
+        });
+
+        btnPhieuMuon.addActionListener(e -> {
+            loadPanel(new PnlPhieuMuon());
+            setActiveButton(btnPhieuMuon);
+        });
+
+        btnPhieuNhap.addActionListener(e -> {
+            loadPanel(new PnlPhieuNhap());
+            setActiveButton(btnPhieuNhap);
+        });
+
+        btnThongKe.addActionListener(e -> {
+            loadPanel(new PnlThongKe());
+            setActiveButton(btnThongKe);
+        });
+
+        btnChung.addActionListener(e -> {
+            loadPanel(new PnlChung());
+            setActiveButton(btnChung);
+        });
+
         btnTrangChu.addActionListener(e -> {
+
             pnlContent.removeAll();
             pnlContent.add(lblWelcome, BorderLayout.CENTER);
             pnlContent.revalidate();
             pnlContent.repaint();
+
+            setActiveButton(btnTrangChu);
         });
     }
+
 
     // --- HÀM TẠO BUTTON CÓ ICON (ĐÃ BỎ RESIZE) ---
     private JButton taoButton(String text, String iconName) {
