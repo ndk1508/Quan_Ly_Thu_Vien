@@ -6,14 +6,17 @@ import javax.swing.*;
 import java.net.URL;
 
 public class FrmMain extends JFrame {
-	private JButton btnDangChon = null;
+    private JButton btnDangChon = null;
 
-    JPanel pnlHeader, pnlMenu, pnlContent;
+    // Màu be cho các trang chức năng khác
+    Color colorBeige = new Color(245, 245, 220); 
+
+    JPanel pnlHeader, pnlMenu, pnlContent, pnlTrangChu;
     JButton btnTrangChu, btnSach, btnDocGia, btnTacGia,
             btnNXB, btnNhanVien, btnPhieuMuon,
             btnPhieuNhap, btnThongKe, btnChung, btnDangXuat;
 
-    JLabel lblTitle, lblWelcome;
+    JLabel lblTitle;
     TaiKhoanDTO taiKhoan;
 
     public FrmMain(TaiKhoanDTO tk) {
@@ -23,7 +26,7 @@ public class FrmMain extends JFrame {
         suKienMenu();
     }
 
-    // --- HÀM LẤY ICON (KHÔNG RESIZE) ---
+    // --- HÀM LẤY ICON ---
     private ImageIcon getAppIcon(String iconName) {
         URL url = getClass().getResource("/icons/" + iconName);
         if (url != null) {
@@ -49,12 +52,11 @@ public class FrmMain extends JFrame {
         lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 22));
         pnlHeader.add(lblTitle);
 
-        // ===== MENU (Khớp tên file từ danh sách icons của bạn) =====
+        // ===== MENU BÊN TRÁI =====
         pnlMenu = new JPanel(new GridLayout(12, 1, 0, 0)); 
         pnlMenu.setBackground(new Color(51, 51, 51));
         pnlMenu.setPreferredSize(new Dimension(240, 0));
 
-        // Tên file phải khớp tuyệt đối kể cả hoa/thường và khoảng trắng
         btnTrangChu = taoButton("Trang Chủ", "home.png"); 
         btnSach = taoButton("Sách", "bookicon.png");
         btnDocGia = taoButton("Độc Giả", "docgia.png");
@@ -63,7 +65,7 @@ public class FrmMain extends JFrame {
         btnNhanVien = taoButton("Nhân Viên", "Staff.png");
         btnPhieuMuon = taoButton("Phiếu Mượn", "phieumuon.png");
         btnPhieuNhap = taoButton("Phiếu Nhập", "phieunhap.png");
-        btnThongKe = taoButton("Thống Kê", "Combo Chart.png");;
+        btnThongKe = taoButton("Thống Kê", "Combo Chart.png");
         btnChung = taoButton("Chung", "chungpng.png");
         btnDangXuat = taoButton("Đăng Xuất", "Exit.png");
 
@@ -77,21 +79,29 @@ public class FrmMain extends JFrame {
         pnlMenu.add(btnPhieuNhap);
         pnlMenu.add(btnThongKe);
         pnlMenu.add(btnChung);
-        pnlMenu.add(new JLabel()); // Placeholder
+        pnlMenu.add(new JLabel()); 
         pnlMenu.add(btnDangXuat);
 
-        // ===== CONTENT =====
+        // ===== CONTENT CHÍNH (BÊN PHẢI) =====
         pnlContent = new JPanel(new BorderLayout());
-        pnlContent.setBackground(Color.WHITE);
+        pnlContent.setBackground(colorBeige);
 
-        lblWelcome = new JLabel(
-                "CHÀO MỪNG BẠN ĐẾN VỚI THƯ VIỆN ĐẠI HỌC NAM CẦN THƠ",
-                JLabel.CENTER
-        );
-        lblWelcome.setFont(new Font("Segoe UI", Font.BOLD, 26));
-        lblWelcome.setForeground(new Color(255, 105, 180));
+        // --- TẠO PANEL TRANG CHỦ CÓ ẢNH PHỦ KÍN ---
+        pnlTrangChu = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                ImageIcon icon = getAppIcon("thuvien.png");
+                if (icon != null) {
+                    // Vẽ ảnh phủ kín toàn bộ chiều rộng và chiều cao của Panel
+                    g.drawImage(icon.getImage(), 0, 0, getWidth(), getHeight(), this);
+                }
+            }
+        };
+        // pnlTrangChu không cần add thêm label nào nữa vì ảnh đã được vẽ đè lên background
 
-        pnlContent.add(lblWelcome, BorderLayout.CENTER);
+        // Mặc định hiển thị trang chủ
+        pnlContent.add(pnlTrangChu, BorderLayout.CENTER);
 
         add(pnlHeader, BorderLayout.NORTH);
         add(pnlMenu, BorderLayout.WEST);
@@ -99,7 +109,6 @@ public class FrmMain extends JFrame {
 
         btnDangXuat.addActionListener(e -> dangXuat());
         setActiveButton(btnTrangChu);
-
     }
 
     private void loadPanel(JPanel panel) {
@@ -110,6 +119,10 @@ public class FrmMain extends JFrame {
     }
 
     private void suKienMenu() {
+        btnTrangChu.addActionListener(e -> {
+            loadPanel(pnlTrangChu);
+            setActiveButton(btnTrangChu);
+        });
 
         btnSach.addActionListener(e -> {
             loadPanel(new PnlSach());
@@ -155,83 +168,54 @@ public class FrmMain extends JFrame {
             loadPanel(new PnlChung());
             setActiveButton(btnChung);
         });
-
-        btnTrangChu.addActionListener(e -> {
-
-            pnlContent.removeAll();
-            pnlContent.add(lblWelcome, BorderLayout.CENTER);
-            pnlContent.revalidate();
-            pnlContent.repaint();
-
-            setActiveButton(btnTrangChu);
-        });
     }
 
-
-    // --- HÀM TẠO BUTTON CÓ ICON (ĐÃ BỎ RESIZE) ---
     private JButton taoButton(String text, String iconName) {
-
         JButton btn = new JButton(text);
-
-        // Icon
         ImageIcon icon = getAppIcon(iconName);
-        if (icon != null) {
-            btn.setIcon(icon);
-        }
+        if (icon != null) btn.setIcon(icon);
 
-        // Style cơ bản
         btn.setFocusPainted(false);
         btn.setFont(new Font("Segoe UI", Font.BOLD, 14));
         btn.setBackground(new Color(51, 51, 51));
         btn.setForeground(Color.WHITE);
-
-        // Viền trên + dưới
-        btn.setBorder(BorderFactory.createMatteBorder(
-                1, 0, 1, 0, new Color(80, 80, 80)
-        ));
-
+        btn.setBorder(BorderFactory.createMatteBorder(1, 0, 1, 0, new Color(80, 80, 80)));
         btn.setHorizontalAlignment(SwingConstants.LEFT);
         btn.setIconTextGap(20);
         btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-        // Hover + Click effect
         btn.addMouseListener(new java.awt.event.MouseAdapter() {
-
             @Override
             public void mouseEntered(java.awt.event.MouseEvent e) {
-
                 if (btn != btnDangChon) {
                     btn.setBackground(new Color(70, 70, 70));
-
-                    btn.setBorder(BorderFactory.createMatteBorder(
-                            1, 0, 1, 0, new Color(255, 140, 0)
-                    ));
+                    btn.setBorder(BorderFactory.createMatteBorder(1, 0, 1, 0, new Color(255, 140, 0)));
                 }
             }
-
             @Override
             public void mouseExited(java.awt.event.MouseEvent e) {
-
                 if (btn != btnDangChon) {
                     btn.setBackground(new Color(51, 51, 51));
-
-                    btn.setBorder(BorderFactory.createMatteBorder(
-                            1, 0, 1, 0, new Color(80, 80, 80)
-                    ));
+                    btn.setBorder(BorderFactory.createMatteBorder(1, 0, 1, 0, new Color(80, 80, 80)));
                 }
             }
-
             @Override
             public void mouseClicked(java.awt.event.MouseEvent e) {
-
                 setActiveButton(btn);
             }
         });
-
         return btn;
     }
 
-
+    private void setActiveButton(JButton btn) {
+        if (btnDangChon != null) {
+            btnDangChon.setBackground(new Color(51, 51, 51));
+            btnDangChon.setBorder(BorderFactory.createMatteBorder(1, 0, 1, 0, new Color(80, 80, 80)));
+        }
+        btn.setBackground(new Color(90, 90, 90));
+        btn.setBorder(BorderFactory.createMatteBorder(1, 0, 1, 0, new Color(255, 140, 0)));
+        btnDangChon = btn;
+    }
 
     private void phanQuyen() {
         if (taiKhoan.getQuyen() == 1) {
@@ -241,32 +225,9 @@ public class FrmMain extends JFrame {
     }
 
     private void dangXuat() {
-        if (JOptionPane.showConfirmDialog(
-                this,
-                "Bạn có chắc muốn đăng xuất?",
-                "Xác nhận",
-                JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
+        if (JOptionPane.showConfirmDialog(this, "Bạn có chắc muốn đăng xuất?", "Xác nhận", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
             dispose();
             new FrmDangNhap().setVisible(true);
         }
     }
-    private void setActiveButton(JButton btn) {
-
-        if (btnDangChon != null) {
-            // Trả nút cũ về màu mặc định
-            btnDangChon.setBackground(new Color(51, 51, 51));
-            btnDangChon.setBorder(BorderFactory.createMatteBorder(
-                    1, 0, 1, 0, new Color(80, 80, 80)
-            ));
-        }
-
-        // Set nút đang chọn
-        btn.setBackground(new Color(90, 90, 90));
-        btn.setBorder(BorderFactory.createMatteBorder(
-                1, 0, 1, 0, new Color(255, 140, 0)
-        ));
-
-        btnDangChon = btn;
-    }
-
 }
