@@ -1,7 +1,10 @@
 package BUS;
 
 import DAL.NhanVienDAL;
+import DAL.TaiKhoanDAL;
 import DTO.NhanVienDTO;
+import DTO.TaiKhoanDTO;
+
 import java.util.ArrayList;
 
 public class NhanVienBUS {
@@ -11,10 +14,16 @@ public class NhanVienBUS {
         return dal.getAll();
     }
 
-    public boolean them(NhanVienDTO nv) {
-        return dal.insert(nv);
+    public boolean themNhanVienVaTaiKhoan(NhanVienDTO nv, TaiKhoanDTO tk) {
+        TaiKhoanDAL tkDal = new TaiKhoanDAL();
+        // 1. Thêm tài khoản trước
+        if (tkDal.insert(tk)) {
+            // 2. Sau đó thêm nhân viên
+            return dal.insert(nv);
+        }
+        return false;
     }
-
+    
     public boolean sua(NhanVienDTO nv) {
         return dal.update(nv);
     }

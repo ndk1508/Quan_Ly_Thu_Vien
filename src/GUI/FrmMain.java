@@ -47,7 +47,7 @@ public class FrmMain extends JFrame {
         pnlHeader.setBackground(new Color(40, 40, 40));
         pnlHeader.setPreferredSize(new Dimension(0, 60));
 
-        lblTitle = new JLabel("HỆ THỐNG QUẢN LÝ THƯ VIỆN", JLabel.CENTER);
+        lblTitle = new JLabel("HỆ THỐNG QUẢN LÝ THƯ VIỆN - DNC", JLabel.CENTER);
         lblTitle.setForeground(Color.WHITE);
         lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 22));
         pnlHeader.add(lblTitle);
@@ -62,9 +62,9 @@ public class FrmMain extends JFrame {
         btnDocGia = taoButton("Độc Giả", "docgia.png");
         btnTacGia = taoButton("Tác Giả", "Tacgia.png");
         btnNXB = taoButton("Nhà Xuất Bản", "nhaxuatban.png");
-        btnNhanVien = taoButton("Nhân Viên", "Staff.png");
         btnPhieuMuon = taoButton("Phiếu Mượn", "phieumuon.png");
         btnPhieuNhap = taoButton("Phiếu Nhập", "phieunhap.png");
+        btnNhanVien = taoButton("Nhân Viên", "Staff.png");
         btnThongKe = taoButton("Thống Kê", "Combo Chart.png");
         btnChung = taoButton("Chung", "chungpng.png");
         btnDangXuat = taoButton("Đăng Xuất", "Exit.png");
@@ -74,9 +74,9 @@ public class FrmMain extends JFrame {
         pnlMenu.add(btnDocGia);
         pnlMenu.add(btnTacGia);
         pnlMenu.add(btnNXB);
-        pnlMenu.add(btnNhanVien);
         pnlMenu.add(btnPhieuMuon);
         pnlMenu.add(btnPhieuNhap);
+        pnlMenu.add(btnNhanVien);
         pnlMenu.add(btnThongKe);
         pnlMenu.add(btnChung);
         pnlMenu.add(new JLabel()); 
@@ -221,6 +221,7 @@ public class FrmMain extends JFrame {
         if (taiKhoan.getQuyen() == 1) {
             btnNhanVien.setVisible(false);
             btnThongKe.setVisible(false);
+            btnChung.setVisible(false);
         }
     }
 
